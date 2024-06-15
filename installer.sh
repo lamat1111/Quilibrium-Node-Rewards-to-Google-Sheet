@@ -78,9 +78,7 @@ SHEET_NAME=$GSHEET_DOC_NAME
 SHEET_TAB_NAME=$GSHEET_SHEET_NAME
 START_COLUMN=$START_COLUMN
 START_ROW=$START_ROW
-NODE_VERSION=$NODE_VERSION
-ARCH=$ARCH
-OS=$OS
+NODE_BINARY=$NODE_BINARY
 EOF
 
 # Ensure config file is executable (not necessary for config files, but keeping for consistency)
