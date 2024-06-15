@@ -20,6 +20,8 @@ fi
 
 # User inputs
 echo
+read -p "➡️  Enter the Node Version (e.g. 1.4.19): " NODE_VERSION
+echo
 read -p "➡️  Enter the Google Sheet Doc name (e.g. Quilibrium Nodes): " GSHEET_DOC_NAME
 echo
 read -p "➡️  Enter the Google Sheet individual sheet/tab name (e.g. Rewards): " GSHEET_SHEET_NAME
@@ -50,6 +52,25 @@ echo "⚙️ Changing permissions for the script..."
 chmod +x ~/scripts/qnode_rewards_to_gsheet.py 
 sleep 1
 
+# Determine the ExecStart line based on the architecture
+ARCH=$(uname -m)
+OS=$(uname -s)
+
+# Determine the node binary name based on the architecture and OS
+if [ "$ARCH" = "x86_64" ]; then
+    if [ "$OS" = "Linux" ]; then
+        NODE_BINARY="node-$NODE_VERSION-linux-amd64"
+    elif [ "$OS" = "Darwin" ]; then
+        NODE_BINARY="node-$NODE_VERSION-linux-amd64"
+    fi
+elif [ "$ARCH" = "aarch64" ]; then
+    if [ "$OS" = "Linux" ]; then
+        NODE_BINARY="node-$NODE_VERSION-linux-amr64"
+    elif [ "$OS" = "Darwin" ]; then
+        NODE_BINARY="node-$NODE_VERSION-linux-amr64"
+    fi
+fi
+
 # Create .config file
 echo "⚙️ Creating configuration file..."
 cat <<EOF > ~/scripts/qnode_rewards_to_gsheet.config
@@ -57,6 +78,9 @@ SHEET_NAME=$GSHEET_DOC_NAME
 SHEET_TAB_NAME=$GSHEET_SHEET_NAME
 START_COLUMN=$START_COLUMN
 START_ROW=$START_ROW
+NODE_VERSION=$NODE_VERSION
+ARCH=$ARCH
+OS=$OS
 EOF
 
 # Ensure config file is executable (not necessary for config files, but keeping for consistency)
