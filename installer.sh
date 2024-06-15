@@ -1,10 +1,45 @@
 #!/bin/bash
 
-echo
-echo "This script will create an automation to populate your Google Sheet with QUIL hourly rewards for each node."
-echo
-echo "ℹ️ Remember to upload your .json authentication file for this to work."
-echo "You must create your Google Sheet and set up your authentication credentials before running this installer."
+cat << "EOF"
+
+                  QQQQQQQQQ       1111111   
+                QQ:::::::::QQ    1::::::1   
+              QQ:::::::::::::QQ 1:::::::1   
+             Q:::::::QQQ:::::::Q111:::::1   
+             Q::::::O   Q::::::Q   1::::1   
+             Q:::::O     Q:::::Q   1::::1   
+             Q:::::O     Q:::::Q   1::::1   
+             Q:::::O     Q:::::Q   1::::l   
+             Q:::::O     Q:::::Q   1::::l   
+             Q:::::O     Q:::::Q   1::::l   
+             Q:::::O  QQQQ:::::Q   1::::l   
+             Q::::::O Q::::::::Q   1::::l   
+             Q:::::::QQ::::::::Q111::::::111
+              QQ::::::::::::::Q 1::::::::::1
+                QQ:::::::::::Q  1::::::::::1
+                  QQQQQQQQ::::QQ111111111111
+                          Q:::::Q           
+                           QQQQQQ  QUILIBRIUM.ONE                                                                                                                                  
+
+
+===================================================================
+             ✨ NODE REWRADS TO GOOGLE SHEET ✨
+===================================================================
+This script will create an automation to populate your Google Sheet
+with QUIL hourly rewards for each node.
+
+Remember to upload your .json authentication file for this to work.
+You must create your Google Sheet and set up your authentication 
+credentials before running this installer.
+
+
+Made with 🔥 by LaMat - https://quilibrium.one
+====================================================================
+
+Processing... ⏳
+
+EOF
+
 sleep 5
 
 # Function to check if a command is available
@@ -34,14 +69,42 @@ START_COLUMN=$(echo "$START_COLUMN" | tr '[:lower:]' '[:upper:]')
 read -p "➡️  Enter the row number you want to begin populating (e.g. 2): " START_ROW
 echo
 
-echo "⚙️ Installing Python 3 and pip3..."
-sudo apt-get update > /dev/null
-sudo apt-get install -y python3 python3-pip > /dev/null || { echo "❌ Failed to install Python 3 and pip3."; exit 1; }
-sleep 1
+# Function to check if a command is available
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Check if Python 3 and pip3 are installed
+if ! command_exists python3 || ! command_exists pip3; then
+    echo "❌ Error: Python 3 and/or pip3 are not installed. Installing them..."
+    
+    # Update package lists and install Python 3 and pip3
+    sudo apt-get update > /dev/null
+    sudo apt-get install -y python3 python3-pip > /dev/null || { echo "❌ Failed to install Python 3 and pip3."; exit 1; }
+    sleep 1
+    
+    # Check if installation was successful
+    if ! command_exists python3 || ! command_exists pip3; then
+        echo "❌ Error: Python 3 and/or pip3 installation failed. Please install them manually and re-run this script."
+        exit 1
+    else
+        echo "✅ Python 3 and pip3 installed successfully."
+    fi
+fi
 
 echo "⚙️ Installing required Python packages..."
+
+# Install required Python packages
 pip3 install gspread oauth2client > /dev/null || { echo "❌ Failed to install required Python packages."; exit 1; }
 sleep 1
+
+# Check if installation was successful
+if ! pip3 show gspread >/dev/null || ! pip3 show oauth2client >/dev/null; then
+    echo "❌ Error: Failed to install required Python packages. Please check your internet connection and try again."
+    exit 1
+else
+    echo "✅ Required Python packages installed successfully."
+fi
 
 # Download the script from GitHub
 echo "⚙️ Grabbing the script..."
