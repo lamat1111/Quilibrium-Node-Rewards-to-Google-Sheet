@@ -52,6 +52,14 @@ chmod +x ~/scripts/qnode_rewards_to_gsheet.config
 
 sleep 1
 
+# Ask user for cron job frequency in hours
+read -p "Enter the frequency of the cron job in hours (default: 1 hour): " CRON_FREQUENCY_HOURS
+CRON_FREQUENCY_HOURS=${CRON_FREQUENCY_HOURS:-1}  # Default to 1 hour if user doesn't provide input
+
+# Ask user for the cron job minute
+read -p "Enter the minute (0-59) when you want the cron job to run (default: random): " CRON_MINUTE
+CRON_MINUTE=${CRON_MINUTE:-$(shuf -i 0-59 -n 1)}  # Set default to random minute if user doesn't provide input
+
 # Cron command to execute
 CRON_COMMAND="/usr/bin/python3 ~/scripts/qnode_rewards_to_gsheet.py"
 
@@ -61,22 +69,18 @@ EXISTING_CRON_JOB=$(crontab -l | grep -F "$CRON_COMMAND")
 # If it exists, delete the existing cron job
 if [ -n "$EXISTING_CRON_JOB" ]; then
     echo "🔄 Deleting existing cron job..."
-    (crontab -l | grep -vF "$CRON_COMMAND") | crontab - || handle_error
+    (crontab -l | grep -vF "$CRON_COMMAND") | crontab - || { echo "❌ Failed to delete existing cron job."; exit 1; }
     echo "✅ Existing cron job deleted successfully."
 fi
 
-# Generate a random minute between 0 and 59
-RANDOM_MINUTE=$(shuf -i 0-59 -n 1)
-
-# New cron job with a random minute every hour
-NEW_CRON_JOB="$RANDOM_MINUTE * * * * $CRON_COMMAND"
+# New cron job with specified frequency and minute
+NEW_CRON_JOB="*/$CRON_FREQUENCY_HOURS * * * * $CRON_COMMAND"
 
 # Add the new cron job
 echo "➕ Adding the new cron job..."
-(crontab -l ; echo "$NEW_CRON_JOB") | crontab - || handle_error
+(crontab -l ; echo "$NEW_CRON_JOB") | crontab - || { echo "❌ Failed to add new cron job."; exit 1; }
 echo "✅ New cron job added successfully:"
 echo "$NEW_CRON_JOB"
-
 
 # Run the script for testing
 echo "Running the script for testing..."
