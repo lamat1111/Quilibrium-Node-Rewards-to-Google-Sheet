@@ -8,6 +8,8 @@ sleep 1
 
 # Ask user for start column letter
 read -p "Enter the start column letter to populate (e.g., A, B, C...): " START_COLUMN
+#convert value to uppercase
+START_COLUMN=$(echo "$START_COLUMN" | tr '[:lower:]' '[:upper:]')
 
 # Download the script from GitHub
 echo "Grabbing the script..."
