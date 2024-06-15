@@ -1,10 +1,11 @@
 #!/bin/bash
 
 echo
-echo "This script will create an automation to populate your GSheet with QUIL hourly rewards for each node"
+echo "This script will create an automation to populate your Google Sheet with QUIL hourly rewards for each node."
 echo
-echo "Remember to upload your .json authentication file for this to work"
-echo "You have to create your Google Sheet and setup your authentication credentials before running this installer"
+echo "Remember to upload your .json authentication file for this to work."
+echo "You have to create your Google Sheet and setup your authentication credentials before running this installer."
+echo
 sleep 5
 
 # User inputs
@@ -54,9 +55,15 @@ sleep 1
 
 # Ask user for cron job frequency in hours
 read -p "Enter the frequency of the cron job in hours (default: 1 hour): " CRON_FREQUENCY_HOURS
+echo
 CRON_FREQUENCY_HOURS=${CRON_FREQUENCY_HOURS:-1}  # Default to 1 hour if user doesn't provide input
 
 # Ask user for the cron job minute
+echo "IMPORTANT NOTE:"
+echo "If you are running this script on several servers/nodes every hour, it is recommended"
+echo "to set at least a different minute for each cron job (e.g., 1, 2, 3, 4,...)"
+echo "Failing to do so may consume your Google Sheet read/write quota and cause the script to fail."
+echo
 read -p "Enter the minute (0-59) when you want the cron job to run (default: random): " CRON_MINUTE
 CRON_MINUTE=${CRON_MINUTE:-$(shuf -i 0-59 -n 1)}  # Set default to random minute if user doesn't provide input
 
@@ -74,7 +81,7 @@ if [ -n "$EXISTING_CRON_JOB" ]; then
 fi
 
 # New cron job with specified frequency and minute
-NEW_CRON_JOB="*/$CRON_FREQUENCY_HOURS * * * * $CRON_COMMAND"
+NEW_CRON_JOB="$CRON_MINUTE */$CRON_FREQUENCY_HOURS * * * $CRON_COMMAND"
 
 # Add the new cron job
 echo "➕ Adding the new cron job..."
