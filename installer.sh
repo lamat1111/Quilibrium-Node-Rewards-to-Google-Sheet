@@ -22,9 +22,9 @@ cat << "EOF"
                            QQQQQQ  QUILIBRIUM.ONE                                                                                                                                  
 
 
-===================================================================
-             ✨ NODE REWRADS TO GOOGLE SHEET ✨
-===================================================================
+=======================================================================
+               ✨ QNODE REWARDS TO GOOGLE SHEET ✨
+=======================================================================
 This script will create an automation to populate your Google Sheet
 with QUIL hourly rewards for each node.
 
@@ -32,15 +32,18 @@ Remember to upload your .json authentication file for this to work.
 You must create your Google Sheet and set up your authentication 
 credentials before running this installer.
 
+Detailed instructions:
+https://github.com/lamat1111/Quilibrium-Node-Rewards-to-Google-Sheet
+
 
 Made with 🔥 by LaMat - https://quilibrium.one
-====================================================================
+=======================================================================
 
 Processing... ⏳
 
 EOF
 
-sleep 5
+sleep 7
 
 # Function to check if a command is available
 command_exists() {
