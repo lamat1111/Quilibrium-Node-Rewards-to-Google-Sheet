@@ -85,7 +85,7 @@ if __name__ == "__main__":
     config = read_config(CONFIG_FILE_PATH)
     
     # Construct command using NODE_VERSION, OS, and ARCH from config
-    command = f"cd ~/ceremonyclient/node && ./{config['NODE_VERSION']}-{config['OS']}-{config['ARCH']} -balance"
+    command = f"cd ~/ceremonyclient/node && ./{config['NODE_BINARY']} -balance"
 
     # Get balance from the command
     balance = get_balance(command)
