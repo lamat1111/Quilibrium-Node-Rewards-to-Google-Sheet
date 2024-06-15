@@ -1,4 +1,4 @@
-# Quilibrium-Node-Rewards-to-Google-Sheet
+# Quilibrium Node rewards to Google Sheet
 Populate a Google Sheet with your node rewards.
 
 ## Create your API authentication credentials
@@ -32,15 +32,16 @@ Populate a Google Sheet with your node rewards.
    - Paste the email address of the service account (found in the JSON key file) into the "People" field and select "Editor" as the permission level.
    - Click "Send".
   
+---
 
 ## Upload the credentials to your server
 
-Name yout json `quilibrium_gsheet_auth.json` and upload it to a `/root/scripts` folder. You can also do this directly n your terminal by running this command:
+Name your JSON file `quilibrium_gsheet_auth.json` and upload it to the `/root/scripts` folder. You can also do this directly in your terminal by running the following command:
 
 ```bash
-nano ~/scripts/quilibrium_gsheet_auth.json
+nano /root/scripts/quilibrium_gsheet_auth.json
 ```
-paste all your json text and save it
+Paste your entire JSON content into the editor and save the file.
 
 ## Run the installer and follow the instructions in your terminal.
 
@@ -51,8 +52,18 @@ chmod +x ~/scripts/qnode_rewards_to_gsheet_installer.sh && \
 ~/scripts/qnode_rewards_to_gsheet_installer.sh
 ```
 
-The installer will create the file `~/scripts/qnode_rewards_to_gsheet.config`, which you can manually edit if you need. If something does not work in populating your Google Sheet doc, that is the first place you should look in by simply running:
+The installer will create the `~/scripts/qnode_rewards_to_gsheet.config` file, which you can manually edit if needed. If something doesn't work when populating your Google Sheet, this is the first file you should check by running:
 
 ```bash
 nano ~/scripts/qnode_rewards_to_gsheet.config
 ```
+
+## Manual installation
+
+Alternatively, you can proceed with a manual installation using the files from this repository:
+
+1. Rename your authentication JSON file to `quilibrium_gsheet_auth.json`,and upload it to the `~/scripts` folder.
+3. Download `qnode_rewards_to_gsheet.config`, edit it as necessary, and upload it to the `~/scripts` folder.
+4. Make `qnode_rewards_to_gsheet.py` executable by running: `chmod +x ~/scripts/qnode_rewards_to_gsheet.py`.
+5. Set up a cronjob to execute `~/scripts/qnode_rewards_to_gsheet.py` periodically.
+
