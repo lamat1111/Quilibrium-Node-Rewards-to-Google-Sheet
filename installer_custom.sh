@@ -21,9 +21,9 @@ sleep 1
 # Create .config file
 echo "Creating configuration file..."
 cat <<EOF > ~/scripts/qnode_rewards_to_gsheet.config
-SHEET_NAME="Quilibrium nodes"
-SHEET_TAB_NAME="Rewards"
-START_COLUMN="$START_COLUMN"
+SHEET_NAME=Quilibrium nodes
+SHEET_TAB_NAME=Rewards
+START_COLUMN=$START_COLUMN
 START_ROW=4
 EOF
 
