@@ -13,7 +13,7 @@ START_COLUMN=$(echo "$START_COLUMN" | tr '[:lower:]' '[:upper:]')
 
 # Download the script from GitHub
 echo "Grabbing the script..."
-wget -O ~/scripts/qnode_rewards_to_gsheet.py https://github.com/lamat1111/Quilibrium-Node-Rewards-to-Google-Sheet/raw/main/qnode_rewards_to_gsheet.py
+wget -O ~/scripts/qnode_rewards_to_gsheet.py https://github.com/lamat1111/Quilibrium-Node-Rewards-to-Google-Sheet/raw/main/qnode_rewards_to_gsheet_custom.py
 
 # Ensure script is executable
 echo "Changing permissions for the script..."
