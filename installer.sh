@@ -71,6 +71,9 @@ elif [ "$ARCH" = "aarch64" ]; then
     fi
 fi
 
+# Remove existing config file if it exists
+rm -f ~/scripts/qnode_rewards_to_gsheet.config
+
 # Create .config file
 echo "⚙️ Creating configuration file..."
 cat <<EOF > ~/scripts/qnode_rewards_to_gsheet.config
