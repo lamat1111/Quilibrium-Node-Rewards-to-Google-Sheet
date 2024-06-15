@@ -1,5 +1,5 @@
 # Quilibrium Node rewards to Google Sheet
-Populate a Google Sheet with your node rewards.
+This script automates the integration of Node rewards data into Google Sheets, utilizing JSON authentication for secure API access and providing both automated and manual installation options.
 
 ## Create your API authentication credentials
 
