@@ -67,3 +67,88 @@ Alternatively, you can proceed with a manual installation using the files from t
 4. Make `qnode_rewards_to_gsheet.py` executable by running: `chmod +x ~/scripts/qnode_rewards_to_gsheet.py`.
 5. Set up a cronjob to execute `~/scripts/qnode_rewards_to_gsheet.py` periodically.
 
+
+## Troubleshooting
+
+*If you are on a VPS/VDS, the script coudl give you an error because it cannot install the Python packages. In this case you will need to create a virtual environment for Python and install them there.*
+
+Here is how to install `gspread` and `oauth2client` using `pip3` in a virtual environment on a Linux system, and how to automate virtual environment activation by adding a command to `~/.bashrc`.
+
+### Installing gspread and oauth2client in a Virtual Environment
+
+#### 1. Create a Virtual Environment
+
+Open a terminal and follow these commands:
+
+```bash
+# Install Python 3 venv module if not already installed
+sudo apt update
+sudo apt install python3-venv
+
+# Create a new directory for your project (optional)
+mkdir my_project
+cd my_project
+
+# Create a virtual environment named 'myenv'
+python3 -m venv myenv
+```
+
+#### 2. Activate the Virtual Environment
+
+Activate the virtual environment to isolate package installations:
+
+```bash
+# Activate the virtual environment
+source myenv/bin/activate
+```
+
+#### 3. Install gspread and oauth2client
+
+Now install `gspread` and `oauth2client` within the virtual environment:
+
+```bash
+# Install gspread and oauth2client using pip3
+pip3 install gspread oauth2client
+```
+
+#### 4. Test Installation
+
+You can verify that the packages were installed correctly:
+
+```bash
+# Test gspread installation
+python3 -c "import gspread; print(gspread.__version__)"
+
+# Test oauth2client installation
+python3 -c "import oauth2client; print(oauth2client.__version__)"
+```
+
+#### 5. Automate Virtual Environment Activation (Optional but Recommended)
+
+To automatically activate the virtual environment whenever you start a new terminal session, add the following line to your `~/.bashrc` file:
+
+```bash
+# Open ~/.bashrc in a text editor
+nano ~/.bashrc
+
+# Add the following line at the end of the file
+source /path/to/your/myenv/bin/activate
+
+# Save and close the file (in nano: Ctrl + X, then Y to confirm, then Enter)
+```
+
+Replace `/path/to/your/myenv` with the actual path to your virtual environment. If you're in your home directory and your virtual environment is named `myenv`, you can use `source ~/myenv/bin/activate`.
+
+#### 6. Reload ~/.bashrc
+
+After editing `~/.bashrc`, reload it in the current terminal session:
+
+```bash
+source ~/.bashrc
+```
+
+### Summary
+
+Now you have `gspread` and `oauth2client` installed in a Python virtual environment (`myenv`). This setup ensures that your Python dependencies are isolated and won't interfere with other projects or the system-wide Python installation. Additionally, your virtual environment will be automatically activated every time you open a new terminal session, simplifying your workflow.
+
+This approach is effective for managing Python packages and ensuring a clean development environment. If you encounter any issues, double-check the paths and commands, and ensure your virtual environment is activated (`(myenv)` prefix in your terminal prompt).
