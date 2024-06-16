@@ -52,33 +52,6 @@ command_exists() {
 
 # Check if Python 3 and pip3 are installed
 if ! command_exists python3 || ! command_exists pip3; then
-    echo "❌ Error: Python 3 and/or pip3 are not installed. Please install them and re-run this script."
-    exit 1
-fi
-
-# User inputs
-echo
-read -p "➡️  Enter the Node Version (e.g. 1.4.19): " NODE_VERSION
-echo
-read -p "➡️  Enter the Google Sheet Doc name (e.g. Quilibrium Nodes): " GSHEET_DOC_NAME
-echo
-read -p "➡️  Enter the Google Sheet individual sheet/tab name (e.g. Rewards): " GSHEET_SHEET_NAME
-echo
-# Ask user for start column letter
-read -p "➡️  Enter the start column letter to populate (e.g., A, B, C...): " START_COLUMN
-echo
-# Convert value to uppercase
-START_COLUMN=$(echo "$START_COLUMN" | tr '[:lower:]' '[:upper:]')
-read -p "➡️  Enter the row number you want to begin populating (e.g. 2): " START_ROW
-echo
-
-# Function to check if a command is available
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
-
-# Check if Python 3 and pip3 are installed
-if ! command_exists python3 || ! command_exists pip3; then
     echo "❌ Error: Python 3 and/or pip3 are not installed. Installing them..."
     
     # Update package lists and install Python 3 and pip3
@@ -108,6 +81,22 @@ if ! pip3 show gspread >/dev/null || ! pip3 show oauth2client >/dev/null; then
 else
     echo "✅ Required Python packages installed successfully."
 fi
+
+# User inputs
+echo
+read -p "➡️  Enter the Node Version (e.g. 1.4.19): " NODE_VERSION
+echo
+read -p "➡️  Enter the Google Sheet Doc name (e.g. Quilibrium Nodes): " GSHEET_DOC_NAME
+echo
+read -p "➡️  Enter the Google Sheet individual sheet/tab name (e.g. Rewards): " GSHEET_SHEET_NAME
+echo
+# Ask user for start column letter
+read -p "➡️  Enter the start column letter to populate (e.g., A, B, C...): " START_COLUMN
+echo
+# Convert value to uppercase
+START_COLUMN=$(echo "$START_COLUMN" | tr '[:lower:]' '[:upper:]')
+read -p "➡️  Enter the row number you want to begin populating (e.g. 2): " START_ROW
+echo
 
 # Download the script from GitHub
 echo "⚙️ Grabbing the script..."
