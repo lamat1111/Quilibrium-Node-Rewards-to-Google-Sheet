@@ -52,7 +52,7 @@ command_exists() {
 
 # Check if Python 3 and pip3 are installed
 if ! command_exists python3 || ! command_exists pip3; then
-    echo "❌ Error: Python 3 and/or pip3 are not installed. Installing them..."
+    echo "Python 3 and/or pip3 are not installed. Installing them..."
     
     # Update package lists and install Python 3 and pip3
     sudo apt-get update > /dev/null
