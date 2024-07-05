@@ -84,18 +84,22 @@ fi
 
 # User inputs
 echo
-read -p "➡️  Enter the Node Version (e.g. 1.4.19): " NODE_VERSION
+read -p "➡️  Enter the Node Version (leave empty for default value '1.4.21'): " NODE_VERSION
+NODE_VERSION=${NODE_VERSION:-"1.4.21"}  # Use default if empty
 echo
-read -p "➡️  Enter the Google Sheet Doc name (e.g. Quilibrium Nodes): " GSHEET_DOC_NAME
+read -p "➡️  Enter the Google Sheet Doc name (leave empty for default value 'Quilibrium nodes'): " GSHEET_DOC_NAME
+GSHEET_DOC_NAME=${GSHEET_DOC_NAME:-"Quilibrium nodes"}  # Use default if empty
 echo
-read -p "➡️  Enter the Google Sheet individual sheet/tab name (e.g. Rewards): " GSHEET_SHEET_NAME
+read -p "➡️  Enter the Google Sheet individual sheet/tab name (leave empty for default value 'Rewards'): " GSHEET_SHEET_NAME
+GSHEET_SHEET_NAME=${GSHEET_SHEET_NAME:-"Rewards"}  # Use default if empty
 echo
 # Ask user for start column letter
 read -p "➡️  Enter the start column letter to populate (e.g., A, B, C...): " START_COLUMN
 echo
 # Convert value to uppercase
 START_COLUMN=$(echo "$START_COLUMN" | tr '[:lower:]' '[:upper:]')
-read -p "➡️  Enter the row number you want to begin populating (e.g. 2): " START_ROW
+read -p "➡️  Enter the row number you want to begin populating (leave empty for default value '5'): " START_ROW
+START_ROW=${START_ROW:-"5"}  # Use default if empty
 echo
 
 # Download the script from GitHub
