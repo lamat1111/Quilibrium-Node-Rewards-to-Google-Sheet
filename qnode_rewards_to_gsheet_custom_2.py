@@ -26,9 +26,9 @@ def read_config(config_file):
 # Google Sheet settings
 config = read_config(CONFIG_FILE_PATH)
 SHEET_NAME = config.get('SHEET_NAME', 'Quilibrium nodes')
-SHEET_TAB_NAME = config.get('SHEET_REWARDS_TAB_NAME', 'Rewards')
-SHEET_TAB_NAME = config.get('SHEET_INCREMENT_TAB_NAME', 'Increment')
-SHEET_TAB_NAME = config.get('SHEET_TIME-TAKEN_TAB_NAME', 'Time taken')
+SHEET_REWARDS_TAB_NAME = config.get('SHEET_REWARDS_TAB_NAME', 'Rewards')
+SHEET_INCREMENT_TAB_NAME = config.get('SHEET_INCREMENT_TAB_NAME', 'Increment')
+SHEET_TIME_TAKEN_TAB_NAME = config.get('SHEET_TIME_TAKEN_TAB_NAME', 'Time taken')
 START_COLUMN = config.get('START_COLUMN', 'B')
 
 def get_balance(command):
@@ -48,47 +48,62 @@ def get_balance(command):
         print("Error occurred while fetching balance:", e)
     return None
 
-def find_next_empty_row(sheet, column, start_row):
-    # Find the first empty cell in the specified column and start row
-    values_list = sheet.col_values(gspread.utils.a1_to_rowcol(column + '1')[1])
-    values_list = values_list[start_row - 1:]  # Adjust for 0-based index
-
-    for i, value in enumerate(values_list):
-        if value == '':
-            return i + start_row
-
-    # If no empty cell found, return the next row after the last filled cell
-    return len(values_list) + start_row
-
-def update_google_sheet(balance, column, row):
+def get_increment():
+    command = "sudo journalctl -u ceremonyclient.service --no-hostname -o cat | grep \"\\\"msg\\\":\\\"completed duration proof\\\"\" | tail -n 1 | jq -r \".increment\""
     try:
-        # Authenticate Google Sheets API
+        result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        return int(result.stdout.strip())
+    except subprocess.CalledProcessError as e:
+        print(f"Error occurred while fetching increment: {e}")
+        return None
+
+def get_time_taken():
+    command = "sudo journalctl -u ceremonyclient.service --no-hostname -o cat | grep \"\\\"msg\\\":\\\"completed duration proof\\\"\" | tail -n 1 | jq -r \".time_taken\""
+    try:
+        result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        return round(float(result.stdout.strip()), 2)
+    except subprocess.CalledProcessError as e:
+        print(f"Error occurred while fetching time taken: {e}")
+        return None
+
+def find_next_empty_row(sheet, column):
+    values_list = sheet.col_values(gspread.utils.a1_to_rowcol(column + '1')[1])
+    return len(values_list) + 1
+
+def update_google_sheet(value, sheet_tab_name, column):
+    try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
         creds = ServiceAccountCredentials.from_json_keyfile_name(AUTH_FILE_PATH, scope)
         client = gspread.authorize(creds)
-        sheet = client.open(SHEET_NAME).worksheet(SHEET_TAB_NAME)
+        sheet = client.open(SHEET_NAME).worksheet(sheet_tab_name)
 
-        # Find the next empty row and update the balance
-        empty_row = find_next_empty_row(sheet, column, row)
+        empty_row = find_next_empty_row(sheet, column)
         cell = f"{column}{empty_row}"
-        sheet.update_acell(cell, balance)
-        print(f"Balance updated successfully: {balance} at {cell}")
+        sheet.update_acell(cell, value)
+        print(f"Value updated successfully: {value} at {cell} in {sheet_tab_name}")
 
     except gspread.exceptions.APIError as e:
-        print("API Error occurred while updating Google Sheet:", e)
+        print(f"API Error occurred while updating Google Sheet ({sheet_tab_name}):", e)
         print("Response status code:", e.response.status_code)
         print("Response content:", e.response.content)
     except Exception as e:
-        print("Error occurred while updating Google Sheet:", e)
+        print(f"Error occurred while updating Google Sheet ({sheet_tab_name}):", e)
 
 if __name__ == "__main__":
-    # Load configuration from file
     config = read_config(CONFIG_FILE_PATH)
     
-    # Construct command using NODE_VERSION, OS, and ARCH from config
+    # Get balance
     command = f"cd ~/ceremonyclient/node && ./{config['NODE_BINARY']} -balance"
-
-    # Get balance from the command
     balance = get_balance(command)
     if balance is not None:
-        update_google_sheet(balance, START_COLUMN, START_ROW)
+        update_google_sheet(balance, SHEET_REWARDS_TAB_NAME, START_COLUMN)
+
+    # Get increment
+    increment = get_increment()
+    if increment is not None:
+        update_google_sheet(increment, SHEET_INCREMENT_TAB_NAME, START_COLUMN)
+
+    # Get time taken
+    time_taken = get_time_taken()
+    if time_taken is not None:
+        update_google_sheet(time_taken, SHEET_TIME_TAKEN_TAB_NAME, START_COLUMN)

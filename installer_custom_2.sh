@@ -50,6 +50,9 @@ read -p "Enter the start column letter to populate (e.g., A, B, C...): " START_C
 #convert value to uppercase
 START_COLUMN=$(echo "$START_COLUMN" | tr '[:lower:]' '[:upper:]')
 
+read -p "➡️  Enter the minute (0-59) when you want the cron job to run (default: random): " CRON_MINUTE
+CRON_MINUTE=${CRON_MINUTE:-$(shuf -i 0-59 -n 1)}  # Set default to random minute if user doesn't provide input
+
 # Download the script from GitHub
 echo "Grabbing the script..."
 wget -O ~/scripts/qnode_rewards_to_gsheet.py https://github.com/lamat1111/Quilibrium-Node-Rewards-to-Google-Sheet/raw/main/qnode_rewards_to_gsheet_custom_2.py
@@ -79,8 +82,6 @@ chmod +x ~/scripts/qnode_rewards_to_gsheet.config
 # Cron command to execute
 CRON_COMMAND="/usr/bin/python3 /root/scripts/qnode_rewards_to_gsheet.py"
 
-sleep 1
-
 # Check if a cron job containing the command exists
 EXISTING_CRON_JOB=$(crontab -l | grep -F "$CRON_COMMAND")
 
@@ -93,9 +94,9 @@ fi
 
 # Add the new cron job
 echo "⚙️ Adding the new cron job..."
-(crontab -l ; echo "0 0 * * * $CRON_COMMAND") | crontab - || { echo "❌ Failed to add new cron job."; exit 1; }
-echo "✅ New cron job added successfully:"
-echo "0 0 * * * $CRON_COMMAND"
+(crontab -l ; echo "$CRON_MINUTE 1 * * * $CRON_COMMAND") | crontab - || { echo "❌ Failed to add new cron job."; exit 1; }
+echo "✅ New cron job added successfully: runs at minute $CRON_MINUTE every day at 1 AM"
+echo "$CRON_MINUTE 1 * * * $CRON_COMMAND"
 
 # Confirmation
 echo
