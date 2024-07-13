@@ -30,6 +30,7 @@ SHEET_REWARDS_TAB_NAME = config.get('SHEET_REWARDS_TAB_NAME', 'Rewards')
 SHEET_INCREMENT_TAB_NAME = config.get('SHEET_INCREMENT_TAB_NAME', 'Increment')
 SHEET_TIME_TAKEN_TAB_NAME = config.get('SHEET_TIME_TAKEN_TAB_NAME', 'Time taken')
 START_COLUMN = config.get('START_COLUMN', 'B')
+START_ROW = int(config.get('START_ROW', '2'))  # Default to row 2 if not specified
 
 def get_balance(command):
     try:
@@ -66,9 +67,12 @@ def get_time_taken():
         print(f"Error occurred while fetching time taken: {e}")
         return None
 
-def find_next_empty_row(sheet, column):
-    values_list = sheet.col_values(gspread.utils.a1_to_rowcol(column + '1')[1])
-    return len(values_list) + 1
+def find_next_empty_row(sheet, column, start_row=START_ROW):
+values_list = sheet.col_values(gspread.utils.a1_to_rowcol(column + '1')[1])
+for i, value in enumerate(values_list[start_row-1:], start=start_row):
+    if value == '':
+        return i
+return len(values_list) + 1
 
 def update_google_sheet(value, sheet_tab_name, column):
     try:

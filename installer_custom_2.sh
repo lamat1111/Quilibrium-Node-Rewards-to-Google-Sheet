@@ -50,6 +50,11 @@ read -p "Enter the start column letter to populate (e.g., A, B, C...): " START_C
 #convert value to uppercase
 START_COLUMN=$(echo "$START_COLUMN" | tr '[:lower:]' '[:upper:]')
 
+# Ask user for start row number
+read -p "Enter the start row number to populate (default: 2): " START_ROW
+# Set default value if user doesn't provide input
+START_ROW=${START_ROW:-2}
+
 read -p "➡️  Enter the minute (0-59) when you want the cron job to run (default: random): " CRON_MINUTE
 CRON_MINUTE=${CRON_MINUTE:-$(shuf -i 0-59 -n 1)}  # Set default to random minute if user doesn't provide input
 
@@ -71,8 +76,9 @@ cat <<EOF > ~/scripts/qnode_rewards_to_gsheet.config
 SHEET_NAME=Quilibrium nodes
 SHEET_REWARDS_TAB_NAME=Rewards
 SHEET_INCREMENT_TAB_NAME=Increment
-SHEET_TIME-TAKEN_TAB_NAME=Time taken
+SHEET_TIME_TAKEN_TAB_NAME=Time taken
 START_COLUMN=$START_COLUMN
+START_ROW=$START_ROW
 NODE_BINARY=$NODE_BINARY
 EOF
 
