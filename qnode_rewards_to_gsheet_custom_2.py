@@ -7,14 +7,9 @@ from oauth2client.service_account import ServiceAccountCredentials
 import os
 
 # Define the paths to the config file and credentials file
-CONFIG_FILE_PATH = "~/scripts/qnode_rewards_to_gsheet.config"
-AUTH_FILE_PATH = "~/scripts/quilibrium_gsheet_auth.json"
+CONFIG_FILE_PATH = os.path.expanduser("~/scripts/qnode_rewards_to_gsheet.config")
+AUTH_FILE_PATH = os.path.expanduser("~/scripts/quilibrium_gsheet_auth.json")
 
-# Expand the paths
-CONFIG_FILE_PATH = os.path.expanduser(CONFIG_FILE_PATH)
-AUTH_FILE_PATH = os.path.expanduser(AUTH_FILE_PATH)
-
-# Function to read configuration from the config file
 def read_config(config_file):
     config = {}
     with open(config_file, 'r') as f:
@@ -30,24 +25,18 @@ SHEET_REWARDS_TAB_NAME = config.get('SHEET_REWARDS_TAB_NAME', 'Rewards')
 SHEET_INCREMENT_TAB_NAME = config.get('SHEET_INCREMENT_TAB_NAME', 'Increment')
 SHEET_TIME_TAKEN_TAB_NAME = config.get('SHEET_TIME_TAKEN_TAB_NAME', 'Time taken')
 START_COLUMN = config.get('START_COLUMN', 'B')
-START_ROW = int(config.get('START_ROW', '2'))  # Default to row 2 if not specified
+START_ROW = max(2, int(config.get('START_ROW', '2')))  # Ensure START_ROW is at least 2
 
 def get_balance(command):
     try:
-        process = subprocess.Popen(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            shell=True
-        )
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         stdout, _ = process.communicate()
         output = stdout.decode('utf-8')
         match = re.search(r'Unclaimed balance:\s*([\d.]+)', output)
-        if match:
-            return float(match.group(1))
+        return float(match.group(1)) if match else None
     except Exception as e:
-        print("Error occurred while fetching balance:", e)
-    return None
+        print(f"Error occurred while fetching balance: {e}")
+        return None
 
 def get_increment():
     command = "sudo journalctl -u ceremonyclient.service --no-hostname -o cat | grep \"\\\"msg\\\":\\\"completed duration proof\\\"\" | tail -n 1 | jq -r \".increment\""
@@ -69,10 +58,12 @@ def get_time_taken():
 
 def find_next_empty_row(sheet, column, start_row):
     values_list = sheet.col_values(gspread.utils.a1_to_rowcol(column + '1')[1])
+    if not values_list:
+        return start_row
     for i, value in enumerate(values_list[start_row-1:], start=start_row):
         if value == '':
             return i
-    return len(values_list) + 1
+    return max(len(values_list) + 1, start_row)
 
 def update_google_sheet(value, sheet_tab_name, column, start_row):
     try:
@@ -85,13 +76,8 @@ def update_google_sheet(value, sheet_tab_name, column, start_row):
         cell = f"{column}{empty_row}"
         sheet.update_acell(cell, value)
         print(f"Value updated successfully: {value} at {cell} in {sheet_tab_name}")
-
-    except gspread.exceptions.APIError as e:
-        print(f"API Error occurred while updating Google Sheet ({sheet_tab_name}):", e)
-        print("Response status code:", e.response.status_code)
-        print("Response content:", e.response.content)
     except Exception as e:
-        print(f"Error occurred while updating Google Sheet ({sheet_tab_name}):", e)
+        print(f"Error occurred while updating Google Sheet ({sheet_tab_name}): {e}")
 
 if __name__ == "__main__":
     config = read_config(CONFIG_FILE_PATH)
