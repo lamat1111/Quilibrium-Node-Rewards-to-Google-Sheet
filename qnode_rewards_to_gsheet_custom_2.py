@@ -68,11 +68,11 @@ def get_time_taken():
         return None
 
 def find_next_empty_row(sheet, column, start_row=START_ROW):
-values_list = sheet.col_values(gspread.utils.a1_to_rowcol(column + '1')[1])
-for i, value in enumerate(values_list[start_row-1:], start=start_row):
-    if value == '':
-        return i
-return len(values_list) + 1
+    values_list = sheet.col_values(gspread.utils.a1_to_rowcol(column + '1')[1])
+    for i, value in enumerate(values_list[start_row-1:], start=start_row):
+        if value == '':
+            return i
+    return len(values_list) + 1
 
 def update_google_sheet(value, sheet_tab_name, column):
     try:
