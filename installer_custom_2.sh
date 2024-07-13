@@ -45,6 +45,8 @@ else
     echo "✅ Required Python packages installed successfully."
 fi
 
+apt install jq -y
+
 # Ask user for start column letter
 read -p "Enter the start column letter to populate (e.g., A, B, C...): " START_COLUMN
 #convert value to uppercase
