@@ -3,7 +3,7 @@
 NODE_BINARY="node-1.4.21-linux-amd64"
 
 echo ""
-echo "This script will create an automation to populate your GSheet with QUIL hourly rewards for each node."
+echo "This script will create an automation to populate your GSheet with your node rewards, increment and time taken."
 echo "This is a custom version and will not work for you unless you modify it."
 echo ""
 sleep 1
@@ -60,19 +60,19 @@ CRON_MINUTE=${CRON_MINUTE:-$(shuf -i 0-59 -n 1)}  # Set default to random minute
 
 # Download the script from GitHub
 echo "Grabbing the script..."
-wget -O ~/scripts/qnode_rewards_to_gsheet.py https://github.com/lamat1111/Quilibrium-Node-Rewards-to-Google-Sheet/raw/main/qnode_rewards_to_gsheet_custom_2.py
+wget -O ~/scripts/qnode_rewards_to_gsheet_2.py https://github.com/lamat1111/Quilibrium-Node-Rewards-to-Google-Sheet/raw/main/qnode_rewards_to_gsheet_custom_2.py
 
 # Ensure script is executable
 echo "Changing permissions for the script..."
-chmod +x ~/scripts/qnode_rewards_to_gsheet.py 
+chmod +x ~/scripts/qnode_rewards_to_gsheet_2.py 
 sleep 1
 
 # Remove existing config file if it exists
-rm -f ~/scripts/qnode_rewards_to_gsheet.config
+rm -f ~/scripts/qnode_rewards_to_gsheet_2.config
 
 # Create .config file
 echo "Creating configuration file..."
-cat <<EOF > ~/scripts/qnode_rewards_to_gsheet.config
+cat <<EOF > ~/scripts/qnode_rewards_to_gsheet_2.config
 SHEET_NAME=Quilibrium nodes
 SHEET_REWARDS_TAB_NAME=Rewards 2
 SHEET_INCREMENT_TAB_NAME=Increment
@@ -83,10 +83,10 @@ NODE_BINARY=$NODE_BINARY
 EOF
 
 # Ensure config file is executable (not necessary for config files, but keeping for consistency)
-chmod +x ~/scripts/qnode_rewards_to_gsheet.config
+chmod +x ~/scripts/qnode_rewards_to_gsheet_2.config
 
 # Cron command to execute
-CRON_COMMAND="/usr/bin/python3 /root/scripts/qnode_rewards_to_gsheet.py"
+CRON_COMMAND="/usr/bin/python3 /root/scripts/qnode_rewards_to_gsheet_2.py"
 
 # Check if a cron job containing the command exists
 EXISTING_CRON_JOB=$(crontab -l | grep -F "$CRON_COMMAND")
@@ -109,7 +109,7 @@ echo
 read -p "✅ Setup completed successfully. Do you want to run a test of the script now? (y/n): " RUN_TEST
 if [[ $RUN_TEST =~ ^[Yy](es)?$ ]]; then
     echo "⚙️ Running the script for testing..."
-    python3 ~/scripts/qnode_rewards_to_gsheet.py || { echo "❌ Script test run failed."; exit 1; }
+    python3 ~/scripts/qnode_rewards_to_gsheet_2.py || { echo "❌ Script test run failed."; exit 1; }
     echo "✅ Script test run completed successfully."
 else
     echo "✅ Setup completed. You can manually run the script or wait for the cron job to execute."

@@ -7,7 +7,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 import os
 
 # Define the paths to the config file and credentials file
-CONFIG_FILE_PATH = os.path.expanduser("~/scripts/qnode_rewards_to_gsheet.config")
+CONFIG_FILE_PATH = os.path.expanduser("~/scripts/qnode_rewards_to_gsheet_2.config")
 AUTH_FILE_PATH = os.path.expanduser("~/scripts/quilibrium_gsheet_auth.json")
 
 def read_config(config_file):
