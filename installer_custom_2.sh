@@ -74,7 +74,7 @@ rm -f ~/scripts/qnode_rewards_to_gsheet.config
 echo "Creating configuration file..."
 cat <<EOF > ~/scripts/qnode_rewards_to_gsheet.config
 SHEET_NAME=Quilibrium nodes
-SHEET_REWARDS_TAB_NAME=Rewards
+SHEET_REWARDS_TAB_NAME=Rewards 2
 SHEET_INCREMENT_TAB_NAME=Increment
 SHEET_TIME_TAKEN_TAB_NAME=Time taken
 START_COLUMN=$START_COLUMN
