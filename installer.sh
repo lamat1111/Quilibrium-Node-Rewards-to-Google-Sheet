@@ -80,16 +80,6 @@ echo "Setup complete. Virtual environment is active."
 echo "To deactivate the virtual environment, run 'deactivate'"
 echo "To activate this environment in the future, run 'source myenv/bin/activate' from this directory"
 
-# Check if the virtual environment activation is already in .bashrc
-if ! grep -Fxq "source /root/myenv/bin/activate" ~/.bashrc; then
-    echo "Adding virtual environment activation to .bashrc..."
-    echo "source /root/myenv/bin/activate" >> ~/.bashrc
-else
-    echo "Virtual environment activation already exists in .bashrc."
-fi
-
-echo "The virtual environment will now activate automatically after each reboot."
-
 #install JQ
 echo "Installing JQ..."
 sudo apt install jq -y
@@ -176,7 +166,7 @@ read -p "➡️  Enter the minute (0-59) when you want the cron job to run (defa
 CRON_MINUTE=${CRON_MINUTE:-$(shuf -i 0-59 -n 1)}  # Set default to random minute if user doesn't provide input
 
 # Cron command to execute
-CRON_COMMAND="/usr/bin/python3 ~/scripts/qnode_rewards_to_gsheet.py"
+CRON_COMMAND="/root/myenv/bin/python ~/scripts/qnode_rewards_to_gsheet.py"
 
 # Check if a cron job containing the command exists
 EXISTING_CRON_JOB=$(crontab -l | grep -F "$CRON_COMMAND")
