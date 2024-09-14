@@ -8,42 +8,50 @@ echo "This is a custom version and will not work for you unless you modify it."
 echo ""
 sleep 1
 
-# Function to check if a command is available
-command_exists() {
+# Function to check if a command exists
+command_exists () {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Check if Python 3 and pip3 are installed
-if ! command_exists python3 || ! command_exists pip3; then
-    echo "Python 3 and/or pip3 are not installed. Installing them..."
-    
-    # Update package lists and install Python 3 and pip3
-    sudo apt-get update > /dev/null
-    sudo apt-get install -y python3 python3-pip > /dev/null || { echo "❌ Failed to install Python 3 and pip3."; exit 1; }
-    sleep 1
-    
-    # Check if installation was successful
-    if ! command_exists python3 || ! command_exists pip3; then
-        echo "❌ Error: Python 3 and/or pip3 installation failed. Please install them manually and re-run this script."
-        exit 1
-    else
-        echo "✅ Python 3 and pip3 installed successfully."
-    fi
+# Install Python 3, venv, and pip if not already installed
+echo "Checking if Python, venv, and pip are installed..."
+if ! command_exists python3 || ! command_exists python3-venv || ! command_exists pip3; then
+    echo "Installing Python, venv, and pip..."
+    sudo apt install -y python3 python3-venv python3-pip
+else
+    echo "Python, venv, and pip are already installed."
 fi
 
-echo "⚙️ Installing required Python packages..."
+# Check if the virtual environment already exists
+VENV_DIR="myenv"
+if [ ! -d "$VENV_DIR" ]; then
+    echo "Creating a virtual environment..."
+    python3 -m venv $VENV_DIR
+else
+    echo "Virtual environment '$VENV_DIR' already exists."
+fi
+
+# Activate the virtual environment
+echo "Activating the virtual environment..."
+source $VENV_DIR/bin/activate
 
 # Install required Python packages
-pip3 install gspread oauth2client > /dev/null || { echo "❌ Failed to install required Python packages."; exit 1; }
-sleep 1
+echo "Installing required packages..."
+pip install gspread oauth2client
 
-# Check if installation was successful
-if ! pip3 show gspread >/dev/null || ! pip3 show oauth2client >/dev/null; then
-    echo "❌ Error: Failed to install required Python packages. Please check your internet connection and try again."
-    exit 1
+echo "Setup complete. Virtual environment is active."
+echo "To deactivate the virtual environment, run 'deactivate'"
+echo "To activate this environment in the future, run 'source myenv/bin/activate' from this directory"
+
+# Check if the virtual environment activation is already in .bashrc
+if ! grep -Fxq "source /root/myenv/bin/activate" ~/.bashrc; then
+    echo "Adding virtual environment activation to .bashrc..."
+    echo "source /root/myenv/bin/activate" >> ~/.bashrc
 else
-    echo "✅ Required Python packages installed successfully."
+    echo "Virtual environment activation already exists in .bashrc."
 fi
+
+echo "The virtual environment will now activate automatically after each reboot."
 
 apt install jq -y
 
