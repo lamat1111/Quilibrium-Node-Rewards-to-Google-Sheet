@@ -5,23 +5,33 @@ import re
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import os
+import logging
 
-# Define the paths to the config file and credentials file
-CONFIG_FILE_PATH = "~/scripts/qnode_rewards_to_gsheet.config"
-AUTH_FILE_PATH = "~/scripts/quilibrium_gsheet_auth.json"
+# Set up logging - only INFO and ERROR levels
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
-# Expand the paths
-CONFIG_FILE_PATH = os.path.expanduser(CONFIG_FILE_PATH)
-AUTH_FILE_PATH = os.path.expanduser(AUTH_FILE_PATH)
+# Define the paths and expand them
+CONFIG_FILE_PATH = os.path.expanduser("~/scripts/qnode_rewards_to_gsheet.config")
+AUTH_FILE_PATH = os.path.expanduser("~/scripts/quilibrium_gsheet_auth.json")
 
-# Function to read configuration from the config file
 def read_config(config_file):
-    config = {}
-    with open(config_file, 'r') as f:
-        for line in f:
-            key, value = line.strip().split('=')
-            config[key.strip()] = value.strip()
-    return config
+    try:
+        if not os.path.exists(config_file):
+            logging.error(f"Config file not found: {config_file}")
+            raise FileNotFoundError(f"Config file not found: {config_file}")
+            
+        config = {}
+        with open(config_file, 'r') as f:
+            for line in f:
+                key, value = line.strip().split('=')
+                config[key.strip()] = value.strip()
+        return config
+    except Exception as e:
+        logging.error(f"Error reading config: {str(e)}")
+        raise
 
 # Google Sheet settings
 config = read_config(CONFIG_FILE_PATH)
@@ -38,56 +48,63 @@ def get_balance(command):
             stderr=subprocess.PIPE,
             shell=True
         )
-        stdout, _ = process.communicate()
+        stdout, stderr = process.communicate()
         output = stdout.decode('utf-8')
-        match = re.search(r'Unclaimed balance:\s*([\d.]+)', output)
+        
+        match = re.search(r'Owned balance:\s*([\d.]+)', output)
         if match:
             return float(match.group(1))
+        else:
+            logging.error("Could not find balance in command output")
+            return None
     except Exception as e:
-        print("Error occurred while fetching balance:", e)
-    return None
+        logging.error(f"Error getting balance: {str(e)}")
+        return None
 
 def find_next_empty_row(sheet, column, start_row):
-    # Find the first empty cell in the specified column and start row
-    values_list = sheet.col_values(gspread.utils.a1_to_rowcol(column + '1')[1])
-    values_list = values_list[start_row - 1:]  # Adjust for 0-based index
+    try:
+        col_idx = gspread.utils.a1_to_rowcol(column + '1')[1]
+        values_list = sheet.col_values(col_idx)
+        values_list = values_list[start_row - 1:]
 
-    for i, value in enumerate(values_list):
-        if value == '':
-            return i + start_row
-
-    # If no empty cell found, return the next row after the last filled cell
-    return len(values_list) + start_row
+        for i, value in enumerate(values_list):
+            if value == '':
+                return i + start_row
+        return len(values_list) + start_row
+    except Exception as e:
+        logging.error(f"Error finding empty row: {str(e)}")
+        raise
 
 def update_google_sheet(balance, column, row):
     try:
-        # Authenticate Google Sheets API
+        if not os.path.exists(AUTH_FILE_PATH):
+            logging.error(f"Auth file not found: {AUTH_FILE_PATH}")
+            raise FileNotFoundError(f"Auth file not found: {AUTH_FILE_PATH}")
+
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
         creds = ServiceAccountCredentials.from_json_keyfile_name(AUTH_FILE_PATH, scope)
         client = gspread.authorize(creds)
         sheet = client.open(SHEET_NAME).worksheet(SHEET_TAB_NAME)
 
-        # Find the next empty row and update the balance
         empty_row = find_next_empty_row(sheet, column, row)
         cell = f"{column}{empty_row}"
         sheet.update_acell(cell, balance)
-        print(f"Balance updated successfully: {balance} at {cell}")
+        logging.info(f"Balance {balance} QUIL updated at {cell}")
 
     except gspread.exceptions.APIError as e:
-        print("API Error occurred while updating Google Sheet:", e)
-        print("Response status code:", e.response.status_code)
-        print("Response content:", e.response.content)
+        logging.error(f"Google Sheets API error: {str(e)}")
     except Exception as e:
-        print("Error occurred while updating Google Sheet:", e)
+        logging.error(f"Error updating sheet: {str(e)}")
 
 if __name__ == "__main__":
-    # Load configuration from file
-    config = read_config(CONFIG_FILE_PATH)
-    
-    # Construct command using NODE_VERSION, OS, and ARCH from config
-    command = f"cd ~/ceremonyclient/node && ./{config['NODE_BINARY']} -balance"
-
-    # Get balance from the command
-    balance = get_balance(command)
-    if balance is not None:
-        update_google_sheet(balance, START_COLUMN, START_ROW)
+    try:
+        config = read_config(CONFIG_FILE_PATH)
+        command = f"cd ~/ceremonyclient/node && ./{config['NODE_BINARY']} -balance"
+        
+        balance = get_balance(command)
+        if balance is not None:
+            update_google_sheet(balance, START_COLUMN, START_ROW)
+        else:
+            logging.error("Failed to get balance")
+    except Exception as e:
+        logging.error(f"Script failed: {str(e)}")
