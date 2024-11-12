@@ -5,6 +5,8 @@ import re
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import os
+import sys
+import time
 
 # Define the paths to the config file and credentials file
 CONFIG_FILE_PATH = os.path.expanduser("~/scripts/qnode_rewards_to_gsheet_2.config")
@@ -12,88 +14,109 @@ AUTH_FILE_PATH = os.path.expanduser("~/scripts/quilibrium_gsheet_auth.json")
 
 def read_config(config_file):
     config = {}
-    with open(config_file, 'r') as f:
-        for line in f:
-            key, value = line.strip().split('=')
-            config[key.strip()] = value.strip()
-    return config
+    try:
+        with open(config_file, 'r') as f:
+            for line in f:
+                if '=' in line and not line.strip().startswith('#'):
+                    key, value = line.strip().split('=', 1)
+                    config[key.strip()] = value.strip()
+        return config
+    except Exception as e:
+        print(f"Error reading config: {e}")
+        sys.exit(1)
 
 # Google Sheet settings
 config = read_config(CONFIG_FILE_PATH)
 SHEET_NAME = config.get('SHEET_NAME', 'Quilibrium nodes')
-SHEET_REWARDS_TAB_NAME = config.get('SHEET_REWARDS_TAB_NAME', 'Rewards 2')
-SHEET_INCREMENT_TAB_NAME = config.get('SHEET_INCREMENT_TAB_NAME', 'Increment')
+SHEET_REWARDS_TAB_NAME = 'Rewards 2'
+SHEET_RING_TAB_NAME = 'Ring'
+SHEET_SENIORITY_TAB_NAME = 'Seniority'
 SHEET_TIME_TAKEN_TAB_NAME = config.get('SHEET_TIME_TAKEN_TAB_NAME', 'Time taken')
 START_COLUMN = config.get('START_COLUMN', 'B')
-START_ROW = max(2, int(config.get('START_ROW', '2')))  # Ensure START_ROW is at least 2
+START_ROW = max(2, int(config.get('START_ROW', '2')))
+TRACK_TIME = config.get('TRACK_TIME', 'false').lower() == 'true'
 
-def get_balance(command):
+# Node command
+NODE_INFO_CMD = f"cd ~/ceremonyclient/node && ./{config['NODE_BINARY']} -node-info"
+
+def get_node_output():
     try:
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        stdout, _ = process.communicate()
-        output = stdout.decode('utf-8')
-        match = re.search(r'Unclaimed balance:\s*([\d.]+)', output)
-        return float(match.group(1)) if match else None
+        # Run command and wait 5 seconds
+        subprocess.run(NODE_INFO_CMD, shell=True, check=True)
+        print("Waiting 5 seconds for output...")
+        time.sleep(5)
+        
+        # Now get the output from the most recent command
+        result = subprocess.run("journalctl -u ceremonyclient.service --no-hostname -o cat | tail -n 50", 
+                              shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        return result.stdout
     except Exception as e:
-        print(f"Error occurred while fetching balance: {e}")
-        return None
-
-def get_increment():
-    command = "sudo journalctl -u ceremonyclient.service --no-hostname -o cat | grep \"\\\"msg\\\":\\\"completed duration proof\\\"\" | tail -n 1 | jq -r \".increment\""
-    try:
-        result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        return int(result.stdout.strip())
-    except subprocess.CalledProcessError as e:
-        print(f"Error occurred while fetching increment: {e}")
+        print(f"Error getting node output: {e}")
         return None
 
 def get_time_taken():
     command = "sudo journalctl -u ceremonyclient.service --no-hostname -o cat | grep \"\\\"msg\\\":\\\"completed duration proof\\\"\" | tail -n 1 | jq -r \".time_taken\""
     try:
         result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        return round(float(result.stdout.strip()), 2)
-    except subprocess.CalledProcessError as e:
-        print(f"Error occurred while fetching time taken: {e}")
+        return round(float(result.stdout.strip()), 2) if result.stdout.strip() else None
+    except Exception as e:
+        print(f"Error getting time taken: {e}")
         return None
 
-def find_next_empty_row(sheet, column, start_row):
-    values_list = sheet.col_values(gspread.utils.a1_to_rowcol(column + '1')[1])
-    if not values_list:
-        return start_row
-    for i, value in enumerate(values_list[start_row-1:], start=start_row):
-        if value == '':
-            return i
-    return max(len(values_list) + 1, start_row)
-
-def update_google_sheet(value, sheet_tab_name, column, start_row):
+def update_google_sheet(value, sheet_tab_name):
     try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
         creds = ServiceAccountCredentials.from_json_keyfile_name(AUTH_FILE_PATH, scope)
         client = gspread.authorize(creds)
         sheet = client.open(SHEET_NAME).worksheet(sheet_tab_name)
-
-        empty_row = find_next_empty_row(sheet, column, start_row)
-        cell = f"{column}{empty_row}"
+        
+        # Find next empty row
+        values_list = sheet.col_values(gspread.utils.a1_to_rowcol(START_COLUMN + '1')[1])
+        next_row = max(len(values_list) + 1, START_ROW)
+        
+        # Update cell
+        cell = f"{START_COLUMN}{next_row}"
         sheet.update_acell(cell, value)
-        print(f"Value updated successfully: {value} at {cell} in {sheet_tab_name}")
+        print(f"Updated {sheet_tab_name}: {value}")
+        return True
     except Exception as e:
-        print(f"Error occurred while updating Google Sheet ({sheet_tab_name}): {e}")
+        print(f"Error updating {sheet_tab_name}: {e}")
+        return False
+
+def main():
+    success = False
+    
+    # Get node info
+    output = get_node_output()
+    
+    if output:
+        # Try to update each value independently
+        ring_match = re.search(r'Prover Ring:\s*(\d+)', output)
+        if ring_match:
+            ring = int(ring_match.group(1))
+            if update_google_sheet(ring, SHEET_RING_TAB_NAME):
+                success = True
+        
+        seniority_match = re.search(r'Seniority:\s*(\d+)', output)
+        if seniority_match:
+            seniority = int(seniority_match.group(1))
+            if update_google_sheet(seniority, SHEET_SENIORITY_TAB_NAME):
+                success = True
+        
+        balance_match = re.search(r'Owned balance:\s*([\d.]+)', output)
+        if balance_match:
+            balance = float(balance_match.group(1))
+            if update_google_sheet(balance, SHEET_REWARDS_TAB_NAME):
+                success = True
+    
+    # Get time taken if enabled
+    if TRACK_TIME:
+        time_taken = get_time_taken()
+        if time_taken is not None:
+            if update_google_sheet(time_taken, SHEET_TIME_TAKEN_TAB_NAME):
+                success = True
+    
+    return 0 if success else 1
 
 if __name__ == "__main__":
-    config = read_config(CONFIG_FILE_PATH)
-    
-    # Get balance
-    command = f"cd ~/ceremonyclient/node && ./{config['NODE_BINARY']} -balance"
-    balance = get_balance(command)
-    if balance is not None:
-        update_google_sheet(balance, SHEET_REWARDS_TAB_NAME, START_COLUMN, START_ROW)
-
-    # Get increment
-    increment = get_increment()
-    if increment is not None:
-        update_google_sheet(increment, SHEET_INCREMENT_TAB_NAME, START_COLUMN, START_ROW)
-
-    # Get time taken
-    time_taken = get_time_taken()
-    if time_taken is not None:
-        update_google_sheet(time_taken, SHEET_TIME_TAKEN_TAB_NAME, START_COLUMN, START_ROW)
+    sys.exit(main())
