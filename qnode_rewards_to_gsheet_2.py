@@ -34,14 +34,10 @@ SHEET_NAME = config.get('SHEET_NAME')
 SHEET_REWARDS_TAB_NAME = config.get('SHEET_REWARDS_TAB_NAME')
 SHEET_RING_TAB_NAME = config.get('SHEET_RING_TAB_NAME')
 SHEET_SENIORITY_TAB_NAME = config.get('SHEET_SENIORITY_TAB_NAME')
-SHEET_TIME_TAKEN_TAB_NAME = config.get('SHEET_TIME_TAKEN_TAB_NAME')
 
 # Sheet parameters
 START_COLUMN = config.get('START_COLUMN')
 START_ROW = max(2, int(config.get('START_ROW', '2')))
-
-# Time tracking configuration
-TRACK_TIME = config.get('TRACK_TIME', 'false').lower() == 'true'
 
 # Node command
 NODE_INFO_CMD = f"cd ~/ceremonyclient/node && ./{config['NODE_BINARY']} -node-info"
@@ -66,15 +62,6 @@ def get_node_output():
         return journal_result.stdout
     except Exception as e:
         print(f"Error getting node output: {e}")
-        return None
-
-def get_time_taken():
-    try:
-        command = "sudo journalctl -u ceremonyclient.service --no-hostname -o cat | grep \"\\\"msg\\\":\\\"completed duration proof\\\"\" | tail -n 1 | jq -r \".time_taken\""
-        result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        return round(float(result.stdout.strip()), 2) if result.stdout.strip() else None
-    except Exception as e:
-        print(f"Error getting time taken: {e}")
         return None
 
 def update_google_sheet(value, sheet_tab_name):
@@ -119,13 +106,6 @@ def main():
         if balance_match:
             balance = float(balance_match.group(1))
             if update_google_sheet(balance, SHEET_REWARDS_TAB_NAME):
-                success = True
-    
-    # Get time taken if enabled
-    if TRACK_TIME:
-        time_taken = get_time_taken()
-        if time_taken is not None:
-            if update_google_sheet(time_taken, SHEET_TIME_TAKEN_TAB_NAME):
                 success = True
     
     if success:
