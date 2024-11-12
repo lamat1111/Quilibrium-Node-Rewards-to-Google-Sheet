@@ -27,11 +27,11 @@ def read_config(config_file):
 
 # Google Sheet settings
 config = read_config(CONFIG_FILE_PATH)
-SHEET_NAME = config.get('SHEET_NAME', 'Quilibrium nodes')
-SHEET_REWARDS_TAB_NAME = 'Rewards 2'
-SHEET_RING_TAB_NAME = 'Ring'
-SHEET_SENIORITY_TAB_NAME = 'Seniority'
-SHEET_TIME_TAKEN_TAB_NAME = config.get('SHEET_TIME_TAKEN_TAB_NAME', 'Time taken')
+SHEET_NAME = config.get('SHEET_NAME')
+SHEET_REWARDS_TAB_NAME = config.get('SHEET_REWARDS_TAB_NAME')
+SHEET_RING_TAB_NAME = config.get('SHEET_RING_TAB_NAME')
+SHEET_SENIORITY_TAB_NAME = config.get('SHEET_SENIORITY_TAB_NAME')
+SHEET_TIME_TAKEN_TAB_NAME = config.get('SHEET_TIME_TAKEN_TAB_NAME')
 START_COLUMN = config.get('START_COLUMN', 'B')
 START_ROW = max(2, int(config.get('START_ROW', '2')))
 TRACK_TIME = config.get('TRACK_TIME', 'false').lower() == 'true'
