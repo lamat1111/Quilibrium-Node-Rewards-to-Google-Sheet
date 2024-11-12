@@ -48,20 +48,29 @@ NODE_INFO_CMD = f"cd ~/ceremonyclient/node && ./{config['NODE_BINARY']} -node-in
 
 def get_node_output():
     try:
-        subprocess.run(NODE_INFO_CMD, shell=True, check=True)
-        print("Waiting 5 seconds for output...")
-        time.sleep(5)
+        print("Getting node info...")
+        result = subprocess.run(NODE_INFO_CMD, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        direct_output = result.stdout
         
-        result = subprocess.run("journalctl -u ceremonyclient.service --no-hostname -o cat | tail -n 50", 
-                              shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        return result.stdout
+        # If we got direct output with the values we need, use it
+        if "Prover Ring:" in direct_output and "Seniority:" in direct_output and "Owned balance:" in direct_output:
+            return direct_output
+            
+        # Otherwise, try journalctl method
+        print("Using journalctl method...")
+        time.sleep(5)
+        journal_result = subprocess.run(
+            "journalctl -u ceremonyclient.service --no-hostname -o cat | tail -n 50",
+            shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        )
+        return journal_result.stdout
     except Exception as e:
         print(f"Error getting node output: {e}")
         return None
 
 def get_time_taken():
-    command = "sudo journalctl -u ceremonyclient.service --no-hostname -o cat | grep \"\\\"msg\\\":\\\"completed duration proof\\\"\" | tail -n 1 | jq -r \".time_taken\""
     try:
+        command = "sudo journalctl -u ceremonyclient.service --no-hostname -o cat | grep \"\\\"msg\\\":\\\"completed duration proof\\\"\" | tail -n 1 | jq -r \".time_taken\""
         result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         return round(float(result.stdout.strip()), 2) if result.stdout.strip() else None
     except Exception as e:
@@ -80,7 +89,7 @@ def update_google_sheet(value, sheet_tab_name):
         
         cell = f"{START_COLUMN}{next_row}"
         sheet.update_acell(cell, value)
-        print(f"Updated {sheet_tab_name}: {value}")
+        print(f"Updated {sheet_tab_name} with value: {value}")
         return True
     except Exception as e:
         print(f"Error updating {sheet_tab_name}: {e}")
@@ -118,6 +127,11 @@ def main():
         if time_taken is not None:
             if update_google_sheet(time_taken, SHEET_TIME_TAKEN_TAB_NAME):
                 success = True
+    
+    if success:
+        print("Successfully updated Google Sheet")
+    else:
+        print("No values were successfully updated")
     
     return 0 if success else 1
 
