@@ -13,6 +13,7 @@ CONFIG_FILE_PATH = os.path.expanduser("~/scripts/qnode_rewards_to_gsheet_2.confi
 AUTH_FILE_PATH = os.path.expanduser("~/scripts/quilibrium_gsheet_auth.json")
 
 def read_config(config_file):
+    """Read and validate configuration from file."""
     config = {}
     try:
         with open(config_file, 'r') as f:
@@ -25,15 +26,21 @@ def read_config(config_file):
         print(f"Error reading config: {e}")
         sys.exit(1)
 
-# Google Sheet settings
+# Google Sheet settings from config
 config = read_config(CONFIG_FILE_PATH)
+
+# Sheet configuration
 SHEET_NAME = config.get('SHEET_NAME')
 SHEET_REWARDS_TAB_NAME = config.get('SHEET_REWARDS_TAB_NAME')
 SHEET_RING_TAB_NAME = config.get('SHEET_RING_TAB_NAME')
 SHEET_SENIORITY_TAB_NAME = config.get('SHEET_SENIORITY_TAB_NAME')
 SHEET_TIME_TAKEN_TAB_NAME = config.get('SHEET_TIME_TAKEN_TAB_NAME')
-START_COLUMN = config.get('START_COLUMN', 'B')
+
+# Sheet parameters
+START_COLUMN = config.get('START_COLUMN')
 START_ROW = max(2, int(config.get('START_ROW', '2')))
+
+# Time tracking configuration
 TRACK_TIME = config.get('TRACK_TIME', 'false').lower() == 'true'
 
 # Node command
@@ -41,12 +48,10 @@ NODE_INFO_CMD = f"cd ~/ceremonyclient/node && ./{config['NODE_BINARY']} -node-in
 
 def get_node_output():
     try:
-        # Run command and wait 5 seconds
         subprocess.run(NODE_INFO_CMD, shell=True, check=True)
         print("Waiting 5 seconds for output...")
         time.sleep(5)
         
-        # Now get the output from the most recent command
         result = subprocess.run("journalctl -u ceremonyclient.service --no-hostname -o cat | tail -n 50", 
                               shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         return result.stdout
@@ -70,11 +75,9 @@ def update_google_sheet(value, sheet_tab_name):
         client = gspread.authorize(creds)
         sheet = client.open(SHEET_NAME).worksheet(sheet_tab_name)
         
-        # Find next empty row
         values_list = sheet.col_values(gspread.utils.a1_to_rowcol(START_COLUMN + '1')[1])
         next_row = max(len(values_list) + 1, START_ROW)
         
-        # Update cell
         cell = f"{START_COLUMN}{next_row}"
         sheet.update_acell(cell, value)
         print(f"Updated {sheet_tab_name}: {value}")
