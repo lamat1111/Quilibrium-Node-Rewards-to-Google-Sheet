@@ -46,20 +46,7 @@ def get_node_output():
     try:
         print("Getting node info...")
         result = subprocess.run(NODE_INFO_CMD, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        direct_output = result.stdout
-        
-        # If we got direct output with the values we need, use it
-        if "Prover Ring:" in direct_output and "Seniority:" in direct_output and "Owned balance:" in direct_output:
-            return direct_output
-            
-        # Otherwise, try journalctl method
-        print("Using journalctl method...")
-        time.sleep(5)
-        journal_result = subprocess.run(
-            "journalctl -u ceremonyclient.service --no-hostname -o cat | tail -n 50",
-            shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-        )
-        return journal_result.stdout
+        return result.stdout
     except Exception as e:
         print(f"Error getting node output: {e}")
         return None
