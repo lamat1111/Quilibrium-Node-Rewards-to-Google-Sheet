@@ -34,6 +34,7 @@ SHEET_NAME = config.get('SHEET_NAME')
 SHEET_REWARDS_TAB_NAME = config.get('SHEET_REWARDS_TAB_NAME')
 SHEET_RING_TAB_NAME = config.get('SHEET_RING_TAB_NAME')
 SHEET_SENIORITY_TAB_NAME = config.get('SHEET_SENIORITY_TAB_NAME')
+SHEET_WORKERS_TAB_NAME = config.get('SHEET_WORKERS_TAB_NAME')
 
 # Sheet parameters
 START_COLUMN = config.get('START_COLUMN')
@@ -93,6 +94,13 @@ def main():
         if balance_match:
             balance = float(balance_match.group(1))
             if update_google_sheet(balance, SHEET_REWARDS_TAB_NAME):
+                success = True
+
+        # Add new pattern matching for Active Workers
+        workers_match = re.search(r'Active Workers:\s*(\d+)', output)
+        if workers_match:
+            workers = int(workers_match.group(1))
+            if update_google_sheet(workers, SHEET_WORKERS_TAB_NAME):
                 success = True
     
     if success:
