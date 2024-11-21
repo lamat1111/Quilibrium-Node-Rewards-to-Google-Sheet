@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NODE_BINARY="node-1.4.21-linux-amd64"
+NODE_BINARY="node-2.0.4-linux-amd64"
 
 echo ""
 echo "This script will create an automation to populate your GSheet with your node rewards, increment and time taken."
@@ -73,13 +73,15 @@ rm -f ~/scripts/qnode_rewards_to_gsheet_2.config
 # Create .config file
 echo "Creating configuration file..."
 cat <<EOF > ~/scripts/qnode_rewards_to_gsheet_2.config
-SHEET_NAME=Quilibrium nodes
-SHEET_REWARDS_TAB_NAME=Rewards 2
-SHEET_INCREMENT_TAB_NAME=Increment
-SHEET_TIME_TAKEN_TAB_NAME=Time taken
-START_COLUMN=$START_COLUMN
-START_ROW=$START_ROW
-NODE_BINARY=$NODE_BINARY
+SHEET_NAME = Quilibrium nodes
+SHEET_REWARDS_TAB_NAME = Rewards 2
+SHEET_RING_TAB_NAME = Ring
+SHEET_SENIORITY_TAB_NAME = Seniority
+SHEET_WORKERS_TAB_NAME = Workers
+SHEET_FRAME_TAB_NAME = Frame
+START_COLUMN = $START_COLUMN
+START_ROW = $START_ROW
+NODE_BINARY = $NODE_BINARY
 EOF
 
 # Ensure config file is executable (not necessary for config files, but keeping for consistency)
@@ -101,8 +103,8 @@ fi
 # Add the new cron job
 echo "⚙️ Adding the new cron job..."
 (crontab -l ; echo "$CRON_MINUTE 1 * * * $CRON_COMMAND") | crontab - || { echo "❌ Failed to add new cron job."; exit 1; }
-echo "✅ New cron job added successfully: runs at minute $CRON_MINUTE every day at 1 AM"
-echo "$CRON_MINUTE 1 * * * $CRON_COMMAND"
+echo "✅ New cron job added successfully: runs at minute $CRON_MINUTE every hour"
+echo "$CRON_MINUTE * * * * $CRON_COMMAND"
 
 # Confirmation
 echo
